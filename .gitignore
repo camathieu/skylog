@@ -1,0 +1,17 @@
+# Binaries and build output
+skylog
+webapp/dist/
+webapp/node_modules/
+
+# Data directory
+data/
+
+# Go tools
+*.test
+
+# Editor
+.idea/
+.vscode/
+*.swp
+*.swo
+.DS_Store
