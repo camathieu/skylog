@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"net/http"
 	"strconv"
+	"strings"
 
 	"github.com/camathieu/skylog/server/models"
 	"github.com/go-chi/chi/v5"
@@ -99,6 +100,10 @@ func (h *JumpHandler) CreateJump(w http.ResponseWriter, r *http.Request) {
 	jump.ID = 0 // ensure auto-assign
 
 	if err := h.DB.Create(&jump).Error; err != nil {
+		if strings.Contains(err.Error(), "UNIQUE") {
+			respondError(w, http.StatusConflict, "A jump with this number already exists")
+			return
+		}
 		respondError(w, http.StatusInternalServerError, "failed to create jump")
 		return
 	}
@@ -133,6 +138,10 @@ func (h *JumpHandler) UpdateJump(w http.ResponseWriter, r *http.Request) {
 	update.CreatedAt = existing.CreatedAt
 
 	if err := h.DB.Save(&update).Error; err != nil {
+		if strings.Contains(err.Error(), "UNIQUE") {
+			respondError(w, http.StatusConflict, "A jump with this number already exists")
+			return
+		}
 		respondError(w, http.StatusInternalServerError, "failed to update jump")
 		return
 	}

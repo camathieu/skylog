@@ -23,7 +23,7 @@ const (
 // Jump represents a single skydive entry in the logbook.
 type Jump struct {
 	ID                 uint      `gorm:"primaryKey"        json:"id"`
-	JumpNumber         int       `gorm:"index;not null"    json:"jumpNumber"`
+	JumpNumber         int       `gorm:"uniqueIndex;not null" json:"jumpNumber"`
 	Date               time.Time `gorm:"not null"          json:"date"`
 	Location           string    `json:"location"`
 	Dropzone           string    `json:"dropzone"`
