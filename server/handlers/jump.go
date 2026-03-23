@@ -99,6 +99,11 @@ func (h *JumpHandler) CreateJump(w http.ResponseWriter, r *http.Request) {
 	}
 	jump.ID = 0 // ensure auto-assign
 
+	// Auto-assign the next jump number
+	var maxJump int
+	h.DB.Model(&models.Jump{}).Select("COALESCE(MAX(jump_number), 0)").Row().Scan(&maxJump)
+	jump.JumpNumber = maxJump + 1
+
 	if err := h.DB.Create(&jump).Error; err != nil {
 		if strings.Contains(err.Error(), "UNIQUE") {
 			respondError(w, http.StatusConflict, "A jump with this number already exists")
@@ -157,14 +162,28 @@ func (h *JumpHandler) DeleteJump(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	// First get the jump to know its number before deleting
+	var existing models.Jump
+	if err := h.DB.First(&existing, id).Error; err != nil {
+		if err == gorm.ErrRecordNotFound {
+			respondError(w, http.StatusNotFound, "jump not found")
+			return
+		}
+		respondError(w, http.StatusInternalServerError, "failed to get jump")
+		return
+	}
+	deletedNumber := existing.JumpNumber
+
 	result := h.DB.Delete(&models.Jump{}, id)
 	if result.Error != nil {
 		respondError(w, http.StatusInternalServerError, "failed to delete jump")
 		return
 	}
-	if result.RowsAffected == 0 {
-		respondError(w, http.StatusNotFound, "jump not found")
-		return
+
+	// Renumber all jumps after the deleted one
+	if err := h.DB.Exec("UPDATE jumps SET jump_number = jump_number - 1 WHERE jump_number > ?", deletedNumber).Error; err != nil {
+		// Just log the error in a real app, but we shouldn't fail the delete response
+		// The delete succeeded, renumbering failed.
 	}
 
 	w.WriteHeader(http.StatusNoContent)

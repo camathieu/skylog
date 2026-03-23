@@ -11,9 +11,13 @@
     <form v-else class="form-card" @submit.prevent="submit">
       <!-- Row 1: Jump # and Date -->
       <div class="form-row">
-        <div class="form-group">
-          <label for="jumpNumber">Jump # *</label>
-          <input id="jumpNumber" v-model.number="form.jumpNumber" type="number" min="1" required placeholder="e.g. 42" />
+        <div class="form-group" v-if="isEdit">
+          <label for="jumpNumber">Jump #</label>
+          <input id="jumpNumber" :value="form.jumpNumber" type="number" disabled class="input-disabled" />
+        </div>
+        <div class="form-group" v-else>
+          <label>Jump #</label>
+          <input type="text" value="Auto-assigned" disabled class="input-disabled" />
         </div>
         <div class="form-group">
           <label for="date">Date *</label>
@@ -241,9 +245,13 @@ input, select, textarea {
   transition: border-color 0.15s;
   width: 100%;
 }
-input:focus, select:focus, textarea:focus {
+input:focus:not(:disabled), select:focus:not(:disabled), textarea:focus:not(:disabled) {
   outline: none;
   border-color: var(--sky-accent);
+}
+.input-disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
 }
 input::placeholder, textarea::placeholder { color: #475569; }
 textarea { resize: vertical; }
